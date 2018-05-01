@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>登陆</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+<script src="https://cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
+<div id="login">
+    <p>{{ msg }}</p>
+    <form action="/login/?next={{ url }}" method=post>{% csrf_token %}
+        <table>
+            <tr>
+                <td>请输入账号：</td>
+                <td><input type="text" name="user_id"></td>
+            </tr>
+            <tr>
+                <td>请输入密码：</td>
+                <td><input type="password" name="password"></td>
+            </tr>
+        </table>
+        <input type=submit value="登陆">
+    </form>
+    <a href="/register/">注册</a>
+</div>
+</body>
+</html>

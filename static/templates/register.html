@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+<script src="https://cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
+<div id="register">
+    <p style="color: red">{{ msg }}</p>
+    <form action="/register/" method=post>{% csrf_token %}
+        <table>
+            <tr>
+                <td>请输入账号(学号/工号)：</td>
+                <td><input type="text" name="user_id" value="{{ user_id }}"></td>
+            </tr>
+            <tr>
+                <td>请输入姓名：</td>
+                <td><input type="text" name="user_name" value="{{ user_name }}"></td>
+            </tr>
+            <tr>
+                <td>请选择性别：</td>
+                <td>
+                    <select name="user_gender">
+                      <option value="M" {% if not user_gender %}selected{% endif %}>男</option>
+                      <option value="F" {% if user_gender %}selected{% endif %}>女</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>请选择类型：</td>
+                <td>
+                    <select name="user_type">
+                      <option value="S" {% if not user_type %}selected{% endif %}>学生</option>
+                      <option value="T" {% if user_type %}selected{% endif %}>教师</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>请输入班级/单位：</td>
+                <td><input type="text" name="user_class" value="{{ user_class }}"></td>
+            </tr>
+            <tr>
+                <td>请输入密码：</td>
+                <td><input type="password" name="password"></td>
+            </tr>
+            <tr>
+                <td>请再次输入密码：</td>
+                <td><input type="password" name="password_again"></td>
+            </tr>
+        </table>
+        <input type=submit value="注册">
+    </form>
+    <a href="/login/">已有账号？登陆</a>
+</div>
+</body>
+</html>

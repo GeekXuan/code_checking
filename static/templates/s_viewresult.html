@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    查看结果
+{% endblock %}
+
+{% block nav %}
+    <li class="nav-item active">
+    <a class="nav-link" href="/s/viewtask">查看作业<span class="sr-only">(current)</span></a>
+    </li>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 5rem 2rem;">
+    <div class="container">
+        <table id="table" class="table table-striped table-bordered" cellspacing="0" width="100%" >
+            <thead>
+            <tr align="center">
+                <th width="20%"></th>
+                {% for each in thead %}
+                <th>{{ each }}</th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody>
+                {% for i in tbody %}
+                    <tr>
+                    {% for j in i %}
+                        <td><button action="{{ j.action }}" class="btn btn-{{ j.type }} btn-block {{ j.disable }}" value="{{ j.value }}">{{ j.text }}</button></td>
+                    {% endfor %}
+                    </tr>
+                {% endfor%}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="{% static 'js/s_viewresult.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    添加作业
+{% endblock %}
+
+{% block nav %}
+    <li class="nav-item">
+        <a class="nav-link" href="/t/viewtask">查看作业</a>
+    </li>
+    <li class="nav-item active">
+        <a class="nav-link" href="/t/addtask">添加作业<span class="sr-only">(current)</span></a>
+    </li>
+{% endblock %}
+
+{% block content %}
+<div id="addtaskdiv" style="padding: 5rem 2rem;">
+    <p style="color: red">{{ msg }}</p>
+    <form action="/t/addtask/" method=post>{% csrf_token %}
+        <p>请输入作业名：<input type="text" name="task_name"></p>
+        <br>
+        <input type=submit value="保存并添加学生">
+    </form>
+</div>
+{% endblock %}
+{% block js %}
+<script src="{% static 'js/t_addtask.js' %}"></script>
+{% endblock %}

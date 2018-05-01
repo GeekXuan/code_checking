@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}
+提交作业
+{% endblock %}
+
+{% block nav %}
+<li class="nav-item active">
+    <a class="nav-link" href="/s/viewtask">查看作业<span class="sr-only">(current)</span></a>
+</li>
+{% endblock %}
+
+{% block content %}
+<div style="padding: 5rem 2rem;">
+    <p>{{ msg }}</p>
+    <form action="/s/viewtask" method="GET">
+        <button type="submit" class="btn btn-primary">返回</button>
+    </form>
+</div>
+{% endblock %}

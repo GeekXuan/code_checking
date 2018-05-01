@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册结果</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+<script src="https://cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
+<div id="login">
+    <p style="color:{{ color }}">{{ msg }}</p>
+    <form action="{{ url }}" method=get>
+        <input type=submit value="{{ value }}">
+    </form>
+</div>
+</body>
+</html>
