@@ -15,15 +15,22 @@
 {% endblock %}
 
 {% block content %}
-<div id="addtaskdiv" style="padding: 5rem 2rem;">
-    <p style="color: red">{{ msg }}</p>
-    <form action="/t/addtask/" method=post>{% csrf_token %}
-        <p>请输入作业名：<input type="text" name="task_name"></p>
-        <br>
-        <input type=submit value="保存并添加学生">
+<div id="tip_div">
+    <form action="/t/addtask/" method="POST">{% csrf_token %}
+        <ul style="list-style-type: none; padding: 10px 0;">
+            <li><input type="text" name="task_name" class="form-control" placeholder="请输入作业名"></li>
+            <li class="mt-4">
+                <button type=submit value="{{ value }}" class="btn btn-primary btn-block">保存并添加学生</button>
+            </li>
+            <li><p style="color: red">{{ msg }}</p></li>
+        </ul>
     </form>
 </div>
 {% endblock %}
+
 {% block js %}
 <script src="{% static 'js/t_addtask.js' %}"></script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/form_base.css' %}">
 {% endblock %}

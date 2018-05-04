@@ -6,17 +6,18 @@ import threading
 import chardet
 import requests
 import threadpool
+from io import BytesIO
 from bs4 import BeautifulSoup
 
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, HttpResponse, HttpResponseRedirect, render_to_response
+from django.shortcuts import render, HttpResponse, HttpResponseRedirect
 from django.http import Http404
-from django.template.context_processors import csrf
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
 
 from .moss import Moss
+from .check_code import create_validate_code
 from .models import MyUser, Task, Submit, Result, Log
 
 LOGIN_URL = "/login"
@@ -46,8 +47,22 @@ def user_login(request):
         return render(request, 'login.html', context)
     user_id = request.POST.get('user_id')
     password = request.POST.get('password')
-    user = authenticate(username=user_id, password=password)
-    if user:
+    check_code = request.POST.get('check_code')
+    session_check_code = request.session['check_code']
+    if check_code == '':
+        context = {
+            'msg': '请输入验证码',
+            'url': url,
+        }
+        return render(request, 'login.html', context)
+    elif check_code.lower() != session_check_code.lower():
+        context = {
+            'msg': '验证码错误，请重试',
+            'url': url,
+        }
+        return render(request, 'login.html', context)
+    try:
+        user = User.objects.get(username=user_id, password=password)
         login(request, user)
         request.session['user'] = {
             'user_id': user_id,
@@ -55,7 +70,7 @@ def user_login(request):
             'user_type': MyUser.objects.get(user__username=user_id).user_type,
         }
         return HttpResponseRedirect('/')
-    else:
+    except:
         context = {
             'msg': '账号或密码错误！如果忘记密码，请联系管理员。',
             'url': url,
@@ -84,6 +99,8 @@ def register(request):
         user_class = request.POST.get('user_class')
         password = request.POST.get('password')
         password_again = request.POST.get('password_again')
+        check_code = request.POST.get('check_code')
+        session_check_code = request.session['check_code']
         context = {
             'user_id': user_id,
             'user_name': user_name,
@@ -92,14 +109,19 @@ def register(request):
             'user_class': user_class,
         }
         if '' in [user_id, user_name, user_class, password, password_again]:
-            context['msg'] = '请填写完整！'
+            context['msg'] = '请填写完整'
+        elif check_code == '':
+            context['msg'] = '请输入验证码'
+        elif check_code.lower() != session_check_code.lower():
+            context['msg'] = '验证码错误，请重试'
         elif password == password_again:
             if len(User.objects.filter(username=user_id)) == 0:
                 try:
-                    user = User(username=user_id)
+                    user = User(username=user_id, password=password)
                     user.save()
-                    user.set_password(password)
-                    user.save()
+                    # 直接存md5，不用再md5一次
+                    # user.set_password(password)
+                    # user.save()
                     myuser = MyUser(user=user,
                                     name=user_name,
                                     gender=user_gender,
@@ -108,21 +130,21 @@ def register(request):
                                     )
                     myuser.save()
                     context = {
+                        'type': 'success',
                         'msg': '注册成功！',
                         'url': '/login/',
                         'value': '登陆',
                     }
-                except Exception as e:
-                    print(e)
+                except:
                     context = {
-                        'color': 'red',
+                        'type': 'danger',
                         'msg': '注册失败！',
                         'url': '/register/',
                         'value': '返回',
                     }
                 return render(request, 'register_result.html', context)
             else:
-                context['msg'] = '该账号已注册，如非本人注册或忘记密码，请联系管理员！'
+                context['msg'] = '该账号已注册，如非本人注册请联系管理员！'
         else:
             context['msg'] = '两次密码输入不一致，请重新输入！'
         return render(request, 'register.html', context)
@@ -138,23 +160,40 @@ def change_password(request):
         context = {}
         password = request.POST.get('password')
         password_again = request.POST.get('password_again')
-        if '' in [password, password_again]:
+        check_code = request.POST.get('check_code')
+        session_check_code = request.session['check_code']
+        if check_code == '':
+            context['msg'] = '请输入验证码'
+        elif check_code.lower() != session_check_code.lower():
+            context['msg'] = '验证码错误，请重试'
+        elif '' in [password, password_again]:
             context['msg'] = '请填写完整！'
         elif password == password_again:
             context = {}
             try:
                 user = User.objects.get(username=request.session['user']['user_id'])
-                user.set_password(password)
+                user.password = password
                 user.save()
-                context['msg'] = '修改成功！'
+                context['msg'] = '修改成功'
+                context['type'] = 'success'
                 save_log(request, '修改密码成功')
             except:
-                context['msg'] = '修改失败！'
+                context['msg'] = '修改失败'
+                context['type'] = 'danger'
                 save_log(request, '修改密码失败')
             return render(request, 'change_password_result.html', context)
         else:
             context['msg'] = '两次密码输入不一致，请重新输入！'
         return render(request, 'change_password.html', context)
+
+
+# 生成验证码
+def create_code(request):
+    f = BytesIO()  # 直接在内存开辟一点空间存放临时生成的图片
+    img, code = create_validate_code()  # 调用check_code生成照片和验证码
+    request.session['check_code'] = code  # 将验证码存在服务器的session中，用于校验
+    img.save(f, 'PNG')  # 生成的图片放置于开辟的内存中
+    return HttpResponse(f.getvalue())  # 将内存的数据读取出来，并以HttpResponse返回
 
 
 # 学生查看作业
@@ -257,7 +296,7 @@ def s_submit(request):
                 encoding = chardet.detect(file_data)['encoding']
                 code = file_data.decode(encoding)#.encode('utf-8')
             else:
-                context = {'msg': '上传失败：文件格式不支持！'}
+                context = {'msg': '上传失败：文件格式不支持！', 'type': 'danger'}
                 save_log(request, '上传作业到[task_id:%s]失败, 文件格式不正确！' % task_id)
                 return render(request, 's_submit_result.html', context)
             # 保存到数据库
@@ -268,11 +307,11 @@ def s_submit(request):
                 # Submit.objects.filter(task=task, user=student).exclude(code='').delete()
                 submit = Submit(task=task, user=student, filename=filename, code=code)
                 submit.save()
-                context = {'msg': '上传成功'}
+                context = {'msg': '上传成功', 'type': 'success'}
                 save_log(request, '上传作业到[task_id:%s]成功' % task_id)
                 return render(request, 's_submit_result.html', context)
             except:
-                context = {'msg': '上传失败'}
+                context = {'msg': '上传失败', 'type': 'danger'}
                 save_log(request, '上传作业到[task_id:%s]失败' % task_id)
                 return render(request, 's_submit_result.html', context)
     else:
@@ -449,6 +488,7 @@ def t_viewtask(request):
                     Submit.objects.exclude(code='').filter(task__id=each['id']).values('user_id').distinct())
                 all_number = len(Submit.objects.filter(task__id=each['id']).values('user_id').distinct())
                 each['submit_number'] = '%d/%d' % (submit_number, all_number)
+                each['can_check'] = False if submit_number == 0 else True
             count = len(task_list)
             if request.is_ajax():
                 draw = int(request.GET['draw'])
@@ -491,12 +531,12 @@ def t_viewtask(request):
                             <input type="hidden" value="%s" name="task_id">
                         <button action="result" class="btn btn-primary btn-xs" value=%d>查看结果</button></form>
                         ''' % (each['id'], each['id'], each['id']) if each['get_result'] else '''
-                        <button action="start_check" class="btn btn-primary btn-xs" value="%d">开始查重</button>
+                        <button action="start_check" class="btn btn-primary btn-xs %s" value="%d">开始查重</button>
                         <form method="post" action="/t/view_result/" style="margin: 0; display: inline">
                             <input type="hidden" value="%s" name="task_id">
                         <button action="result" class="btn btn-primary btn-xs disabled" disabled="disabled"
-                         value=%d>查看结果</button></form>''' % (each['id'], each['id'], each['id'])
-                                                   )
+                         value=%d>查看结果</button></form>''' % ('' if each['can_check'] else 'disabled" disabled="disabled',
+                                                             each['id'], each['id'], each['id']))
                     )
                     json_data_list.append(data)
                 data_json["data"] = json_data_list

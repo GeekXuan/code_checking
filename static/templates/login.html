@@ -1,29 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>登陆</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-</head>
-<body>
-<script src="https://cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
-<div id="login">
-    <p>{{ msg }}</p>
-    <form action="/login/?next={{ url }}" method=post>{% csrf_token %}
-        <table>
+{% extends "form_base.html" %}
+{% load static %}
+
+{% block title %}
+登陆
+{% endblock %}
+
+{% block content %}
+<div id="form_div">
+    <form action="/login/?next={{ url }}" method=post id="login_form">{% csrf_token %}
+        <table style="border-collapse: separate;border-spacing: 0 28px; width: 300px">
             <tr>
-                <td>请输入账号：</td>
-                <td><input type="text" name="user_id"></td>
+                <!--<td><label for="name">请输入账号：</label></td>-->
+                <!--<td><input type="text" name="user_id" class="form-control" id="name" placeholder="学号/工号"></td>-->
+                <td><img src="{% static 'source/images/user.png' %}" class="image" style="top:75px;"></td>
+                <td colspan="2"><input type="text" name="user_id" class="form-control" id="name" placeholder="学号/工号">
+                </td>
             </tr>
             <tr>
-                <td>请输入密码：</td>
-                <td><input type="password" name="password"></td>
+                <td><img src="{% static 'source/images/password.png' %}" class="image" style="top:75px;"></td>
+                <td colspan="2"><input type="password" name="password" class="form-control" id="passwd"
+                                       placeholder="密码"></td>
+            </tr>
+            <tr>
+                <td><img src="{% static 'source/images/verify.png' %}" class="image" style="top:75px;"></td>
+                <td><input type="text" maxlength="4" name="check_code" class="form-control" id="code" placeholder="验证码">
+                </td>
+                <td align="center"><img id="check_code_img" src="/create_code/" onclick="refresh_check_code(this)"></td>
+            </tr>
+            <tr align="center">
+                <td colspan="3"><input type="button" id="login_btn" class="btn btn-primary btn-block ml-1" value="登陆">
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" align="left"><p style="color: red">{{ msg }}</p></td>
+                <td align="right"><a href="/register/">注册</a></td>
             </tr>
         </table>
-        <input type=submit value="登陆">
     </form>
-    <a href="/register/">注册</a>
 </div>
-</body>
-</html>
+<script>
+    function refresh_check_code(ths) {
+        ths.src += '?';
+    }
+
+    $("#login_btn").on('click', function () {
+        var password = $("#passwd").val();
+        var hash = hex_md5(password);
+        $("#passwd").val(hash);
+        $("#login_form").submit();
+    });
+</script>
+
+{% endblock %}

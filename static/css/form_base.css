@@ -1,0 +1,31 @@
+body {
+    background-color: #f1f5f9;
+    text-align:center;
+    margin: 0;
+}
+#form_div {
+    background-color: white;
+    width: 400px;
+    height: 420px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 33px 1px #ddd;
+    padding: 40px;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    margin-left: -200px;
+    margin-top: 80px;
+}
+#tip_div {
+    background-color: white;
+    width: 350px;
+    height: 200px;
+    border-radius: 5px;
+    box-shadow: 2px 2px 33px 1px #ddd;
+    padding: 40px;
+    position: absolute;
+    top: 50px;
+    left: 50%;
+    margin-left: -200px;
+    margin-top: 150px;
+}

@@ -12,15 +12,26 @@
 {% endblock %}
 
 {% block content %}
-<form action="" style="padding: 5rem 2rem;" method="POST" enctype="multipart/form-data">
-    <fieldset class="form-group">
-        <input type="file" class="form-control-file" id="InputFile" name="file">
-    </fieldset>
-    <input type="hidden" name="task_id" value="{{ task_id }}">
-    <button type="submit" class="btn btn-primary">上传</button>
-</form>
+<div id="tip_div">
+    <form action="" method="POST" enctype="multipart/form-data">{% csrf_token %}
+        <ul style="list-style-type: none; padding: 10px 0;">
+            <li>
+                <fieldset class="form-group">
+                    <input type="file" class="form-control-file" id="InputFile" name="file">
+                </fieldset>
+            </li>
+            <li class="mt-4">
+                <input type="hidden" name="task_id" value="{{ task_id }}">
+                <button type="submit" class="btn btn-primary btn-block">上传</button>
+            </li>
+        </ul>
+    </form>
+</div>
 {% endblock %}
 
 {% block js %}
 <script src="{% static 'js/s_submit.js' %}"></script>
+{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/form_base.css' %}">
 {% endblock %}

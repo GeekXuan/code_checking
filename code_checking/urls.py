@@ -7,6 +7,7 @@ urlpatterns = [
     path('logout/', views.user_logout),
     path('register/', views.register),
     path('change_password/', views.change_password),
+    path('create_code/', views.create_code),
     # 学生
     path('s/viewtask/', views.s_viewtask),
     path('s/submit/', views.s_submit),

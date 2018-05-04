@@ -1,18 +1,20 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>注册结果</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/login.css' %}">
-</head>
-<body>
-<script src="https://cdn.bootcss.com/canvas-nest.js/1.0.1/canvas-nest.min.js"></script>
-<div id="login">
-    <p style="color:{{ color }}">{{ msg }}</p>
-    <form action="{{ url }}" method=get>
-        <input type=submit value="{{ value }}">
-    </form>
+{% extends "form_base.html" %}
+
+{% block title %}
+    注册
+{% endblock %}
+
+{% block content %}
+<div id="tip_div">
+    <ul style="list-style-type: none; padding: 10px 0;">
+        <li>
+            <div class="alert alert-{{ type }}" role="alert" style="text-align: center"><strong>{{ msg }}!</strong></div>
+        </li>
+        <li>
+            <form action="{{ url }}" method="GET">
+                <input type=submit value="{{ value }}" class="btn btn-primary btn-block">
+            </form>
+        </li>
+    </ul>
 </div>
-</body>
-</html>
+{% endblock %}
