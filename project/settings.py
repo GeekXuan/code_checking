@@ -133,6 +133,3 @@ STATICFILES_DIRS = [
 PASSWORD_HASHERS = (
     'django.contrib.auth.hashers.UnsaltedMD5PasswordHasher',
 )
-
-USERID = ''
-SUFFIX = ('c', 'cpp', 'java', 'py', 'htm', 'html', 'asp', 'jsp', 'php', 'js', 'css', 'txt', 'pl')

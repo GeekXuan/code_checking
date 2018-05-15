@@ -52,11 +52,11 @@ DATABASES = {
     }
 }
 ```
-（2）修改USERID为moss的账户
+（2）修改code_checking/config.py中的USERID为moss的账户
 ```python
 USERID = '987654321'
 ```
-（3）修改支持的格式，该项目支持2003后的word格式，即docx格式，其他格式需为纯文本格式
+（3）修改code_checking/config.py中支持的纯文本文件的后缀格式，该项目已支持2003后的word格式，即docx格式，纯文本格式的后缀名，在下面的语句中添加。
 ```python
 SUFFIX = ('c', 'cpp', 'java', 'py', 'htm', 'html', 'asp', 'jsp', 'php', 'js', 'css', 'txt', 'pl')
 ```
@@ -133,6 +133,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, "static")
 ```console
 python manage.py collectstatic
 ```
+
+* 配置验证码的字体路径
+修改code_checking/config.py中的TIFPATH为字体的绝对路径（UNIX机器上会提示找不到该字体，windows暂时未发现该问题），该字体MONACO.TIF位于static/source/font/
+
 到这里配置完成了，启动uwsgi和nginx来运行这个web应用。
 
 ## 4.Django后台使用说明

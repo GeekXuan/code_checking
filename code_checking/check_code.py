@@ -1,6 +1,7 @@
 import random
 import os
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from .config import TIFPATH
 
 _letter_cases = "abcdefghjkmnpqrstuvwxy"  # 小写字母，去除可能干扰的i，l，o，z
 _upper_cases = _letter_cases.upper()  # 大写字母
@@ -15,7 +16,7 @@ def create_validate_code(size=(120, 30),
                          bg_color=(238, 238, 238),
                          fg_color=(0, 0, 255),
                          font_size=18,
-                         font_type=os.path.join(os.getcwd(), '..', 'static', 'font', 'MONACO.TTF'),
+                         font_type=TIFPATH,
                          length=4,
                          draw_lines=True,
                          n_line=(1, 2),

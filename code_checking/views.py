@@ -19,7 +19,7 @@ from django.contrib.auth.models import User
 from .moss import Moss
 from .check_code import create_validate_code
 from .models import MyUser, Task, Submit, Result, Log
-from ..project.settings import USERID, SUFFIX
+from .config import USERID, SUFFIX
 
 LOGIN_URL = "/login"
 
