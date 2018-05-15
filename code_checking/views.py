@@ -19,10 +19,9 @@ from django.contrib.auth.models import User
 from .moss import Moss
 from .check_code import create_validate_code
 from .models import MyUser, Task, Submit, Result, Log
+from ..project.settings import USERID, SUFFIX
 
 LOGIN_URL = "/login"
-USERID = ''
-SUFFIX = ('c', 'cpp', 'java', 'py', 'htm', 'html', 'asp', 'jsp', 'php', 'js', 'css', 'txt', 'pl')
 
 
 # 主页
