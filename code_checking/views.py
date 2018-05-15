@@ -9,7 +9,7 @@ import threadpool
 from io import BytesIO
 from bs4 import BeautifulSoup
 
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, HttpResponse, HttpResponseRedirect
 from django.http import Http404
@@ -21,7 +21,7 @@ from .check_code import create_validate_code
 from .models import MyUser, Task, Submit, Result, Log
 
 LOGIN_URL = "/login"
-USERID = '437681782'
+USERID = ''
 SUFFIX = ('c', 'cpp', 'java', 'py', 'htm', 'html', 'asp', 'jsp', 'php', 'js', 'css', 'txt', 'pl')
 
 
@@ -29,11 +29,11 @@ SUFFIX = ('c', 'cpp', 'java', 'py', 'htm', 'html', 'asp', 'jsp', 'php', 'js', 'c
 @login_required(login_url=LOGIN_URL)
 def home(request):
     if request.session['user']['user_type'] == 'S':
-        return s_viewtask(request)
+        return s_view_task(request)
     elif request.session['user']['user_type'] == 'T':
-        return t_viewtask(request)
+        return t_view_task(request)
     elif request.session['user']['user_type'] == 'A':
-        return a_viewlog(request)
+        return a_view_log(request)
     else:
         raise Http404("你没有权限访问该页面")
 
@@ -198,7 +198,7 @@ def create_code(request):
 
 # 学生查看作业
 @login_required(login_url=LOGIN_URL)
-def s_viewtask(request):
+def s_view_task(request):
     if request.session['user']['user_type'] == 'S':
         if request.method == 'GET':
             student_id = request.session['user']['user_id']
@@ -329,6 +329,9 @@ def s_view_result(request):
             if len(Submit.objects.filter(task__id=task_id, user=MyUser.objects.get(user__username=stu_id))) > 0:
                 task = Task.objects.get(id=task_id)
                 result_obj_list = Result.objects.filter(task=task)
+                # 所有作业无抄袭现象
+                if len(result_obj_list) == 1 and result_obj_list[0].matched_lines == 'no result':
+                    return render(request, 's_no_result.html')
                 data_list = []
                 stu_list = []
                 for each in result_obj_list:
@@ -376,6 +379,8 @@ def s_view_result(request):
                         if not flag1 and not flag2:
                             result_2[j] = {'line': 0, 'data': None}
                     result[i] = {'num': len([x for x in result_2 if result_2[x]['data'] is not None]), 'data': result_2}
+                if stu_id not in result:  # 该生无抄袭现象
+                    return render(request, 's_no_result.html')
                 # 根据需要调整行列数据
                 row_th = [stu_id]  # 行名，result[行名]['data']是一行的数据
                 column_th = []  # 列名，result[行名]['data'][列名]['data']是一格的数据
@@ -475,7 +480,7 @@ def s_view_detail(request):
 # 教师查看作业
 @csrf_exempt
 @login_required(login_url=LOGIN_URL)
-def t_viewtask(request):
+def t_view_task(request):
     if request.session['user']['user_type'] == 'T':
         if request.method == 'GET':
             teacher_id = request.session['user']['user_id']
@@ -554,7 +559,7 @@ def t_viewtask(request):
 
 # 教师添加作业
 @login_required(login_url=LOGIN_URL)
-def t_addtask(request):
+def t_add_task(request):
     if request.session['user']['user_type'] == 'T':
         if request.method == 'GET':
             return render(request, 't_addtask.html')
@@ -577,7 +582,7 @@ def t_addtask(request):
 
 # 教师为作业添加学生页面
 @login_required(login_url=LOGIN_URL)
-def t_addstudent(request):
+def t_manage_student(request):
     if request.session['user']['user_type'] == 'T':
         if request.method == 'GET':
             task_id = request.GET.get('taskid')
@@ -800,21 +805,38 @@ def mul_get_result(request, codes_list, task_id):
     save_log(request, '作业[%s]查重结果链接获取成功[%s]' % (task_id, url))
     r = requests.get(url)
     soup = BeautifulSoup(r.content, "html.parser")
-    num = int(soup.find_all('tr')[-1].find('a').get('href').split('/')[-1].split('.')[0][5:])
+    try:
+        num = int(soup.find_all('tr')[-1].find('a').get('href').split('/')[-1].split('.')[0][5:])
+    except AttributeError:
+        num = 0
     Result.objects.filter(task=Task.objects.get(id=task_id)).delete()  # 清除之前的记录
-    # 多线程
-    func_vars = []  # 参数
-    for i in range(num + 1):
-        func_vars.append(([request, task_id, url, i], None))
-    pool = threadpool.ThreadPool(4)
-    reqs = threadpool.makeRequests(sin_get_result, func_vars)
-    [pool.putRequest(req) for req in reqs]
-    pool.wait()
-    if len(Result.objects.filter(task=Task.objects.get(id=task_id))) == num + 1:
-        save_log(request, '作业[%s]查重结果全部获取完成' % task_id)
+    if num == 0:  # 没有抄袭结果
+        result = Result(
+            task=Task.objects.get(id=task_id),
+            file1_name='',
+            file2_name='',
+            percent1=0,
+            percent2=0,
+            matched_lines='no result',
+            file1_code='',
+            file2_code='',
+        )
+        result.save()
+        save_log(request, '作业[%s]查重结果获取完成，无抄袭结果' % task_id)
     else:
-        Result.objects.filter(task=Task.objects.get(id=task_id)).delete()
-        save_log(request, '作业[%s]查重结果获取失败' % task_id)
+        # 多线程
+        func_vars = []  # 参数
+        for i in range(num + 1):
+            func_vars.append(([request, task_id, url, i], None))
+        pool = threadpool.ThreadPool(4)
+        reqs = threadpool.makeRequests(sin_get_result, func_vars)
+        [pool.putRequest(req) for req in reqs]
+        pool.wait()
+        if len(Result.objects.filter(task=Task.objects.get(id=task_id))) == num + 1:
+            save_log(request, '作业[%s]查重结果全部获取完成' % task_id)
+        else:
+            Result.objects.filter(task=Task.objects.get(id=task_id)).delete()
+            save_log(request, '作业[%s]查重结果获取失败' % task_id)
 
 
 # 获得一条结果
@@ -883,6 +905,8 @@ def t_view_result(request):
             task = Task.objects.get(id=task_id)
             if task.teacher == teacher:
                 result_obj_list = Result.objects.filter(task=task)
+                if len(result_obj_list) == 1 and result_obj_list[0].matched_lines == 'no result':
+                    return render(request, 't_no_result.html')
                 data_list = []
                 stu_list = []
                 for each in result_obj_list:
@@ -1037,7 +1061,7 @@ def t_view_detail(request):
 
 # 管理员查看日志
 @login_required(login_url=LOGIN_URL)
-def a_viewlog(request):
+def a_view_log(request):
     if request.session['user']['user_type'] == 'A':
         if request.method == 'GET':
             log_obj_list = Log.objects.all().values()
